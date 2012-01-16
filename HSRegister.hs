@@ -1,8 +1,10 @@
 import System
 import System.Time
 import System.Locale
+import System.Directory
+import System.FilePath.Posix
 import System.Console.GetOpt
-import Directory
+import System.IO.Unsafe
 import Control.Monad
 import Database.HDBC
 import Database.HDBC.Sqlite3
@@ -19,7 +21,7 @@ headerString :: String
 headerString = "Usage: ic [OPTION...] files..."
 
 dbLocation :: FilePath
-dbLocation = "~/.hsr.db"
+dbLocation = unsafePerformIO getHomeDirectory </> ".hsr.db"
 
 timeFormat :: String
 timeFormat = "%Y-%m-%d %H:%M:%S"
@@ -56,13 +58,13 @@ main = do
   --Initialize Database
   when initialize $ do
     continue <- confirmSetup
-    when continue (dbSetup)
+    when continue (dbSetup dbLocation)
 
   --Make a transaction
-  unless (isNothing amount) $ makeTransaction account (setSignOnTrans transaction (fromJust amount)) checkNum description
+  unless (isNothing amount) $ makeTransaction dbLocation account (setSignOnTrans transaction (fromJust amount)) checkNum description
 
   --View account
-  when view $ viewAccount account
+  when view $ viewAccount dbLocation account
 
 --These keep things inline
 data Transaction = Deposit | Withdrawl deriving (Eq, Show)
@@ -152,8 +154,8 @@ confirmSetup = do
     "Yes" -> return True
     otherwise -> return False
 
-dbSetup :: IO()
-dbSetup = do
+dbSetup :: FilePath -> IO()
+dbSetup dbLocation = do
   fExist <- (doesFileExist dbLocation)
   when fExist (removeFile dbLocation)
   conn <- connectSqlite3 dbLocation
@@ -163,8 +165,8 @@ dbSetup = do
   commit conn
   disconnect conn
 
-makeTransaction :: Account -> Double -> Maybe Int -> Maybe String -> IO ()
-makeTransaction ac am cn desc = do
+makeTransaction :: FilePath -> Account -> Double -> Maybe Int -> Maybe String -> IO ()
+makeTransaction dbLocation ac am cn desc = do
   calendar <- getClockTime >>= toCalendarTime
   conn <- connectSqlite3 dbLocation
   case ac of
@@ -174,8 +176,8 @@ makeTransaction ac am cn desc = do
   commit conn
   disconnect conn
 
-viewAccount :: Account -> IO ()
-viewAccount ac = do
+viewAccount :: FilePath -> Account -> IO ()
+viewAccount dbLocation ac = do
   conn <- connectSqlite3 dbLocation
   result <- case ac of
     Checking -> quickQuery' conn "SELECT * from checking" []
