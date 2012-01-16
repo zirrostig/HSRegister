@@ -1,0 +1,19 @@
+Name: Zachary Stigall
+Dir: HSRegister
+About Dir:
+    Haskell application for tracking money.
+Contents:
+    HSRegister.hs
+    README
+
+HSRegister.hs:
+    This is all the code.
+    Compiling:
+        $ ghc -O2 HSRegister.hs -o hsr
+    Install (requires root):
+        # cp ./hsr /usr/local/bin
+    Using:
+        $ hsr [Agrs]
+        For more info on arguments run
+            $ hsr -h
+
