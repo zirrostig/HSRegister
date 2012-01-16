@@ -15,7 +15,7 @@ import Char
 
 --Program Settings
 versionString :: String
-versionString = "HSRegister - Banking Register: Version 0.1"
+versionString = "HSRegister - Banking Register: Version 0.2"
 
 headerString :: String
 headerString = "Usage: ic [OPTION...] files..."
